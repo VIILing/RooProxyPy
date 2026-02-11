@@ -1,14 +1,22 @@
-import json  
-import time  
-import sys  
-import httpx  
-import uvicorn  
-from fastapi import FastAPI, Request, Response  
-from fastapi.responses import StreamingResponse  
-from loguru import logger  
+import json
+import time
+import sys
+import httpx
+import uvicorn
+from fastapi import FastAPI, Request, Response
+from fastapi.responses import StreamingResponse
+from loguru import logger
+from dotenv import load_dotenv
+import os
+
+# 加载 .env 文件
+load_dotenv()
   
 # ================= 配置区域 =================  
-  
+
+# 端口号
+LISTEN_PORT: int = int(os.getenv("LISTEN_PORT", "11731").strip() or 11731)
+
 # 1. OpenAI 兼容的上游地址  
 TARGET_BASE_URL = "https://zenmux.ai/api/v1"  
   
@@ -18,8 +26,9 @@ ANTHROPIC_BASE_URL = "https://zenmux.ai/api/anthropic/v1"
 # 3. API Key (留空让 Roo Code 传入；填了会覆盖)  
 API_KEY = ""  
   
-# 4. 你的梯子代理地址  
-PROXY_URL = "http://127.0.0.1:10809"  
+# 4. 你的梯子代理地址（可选，留空代表不设置）
+# 从环境变量 PROXY_URL 读取，如果未设置或为空则为 None
+PROXY_URL = os.getenv("PROXY_URL", "").strip() or None
   
 # ================= Anthropic 特有配置 =================  
   
@@ -309,7 +318,8 @@ async def proxy_all(request: Request, path: str):
         logger.error(f"❌ 代理失败: {e}")  
         return Response(content=f"Proxy Error: {e}", status_code=502)  
   
-if __name__ == "__main__":  
-    logger.info(f"🔥 全能代理已启动: http://0.0.0.0:11732")  
-    logger.info(f"🔗 上游: {TARGET_BASE_URL} | 代理: {PROXY_URL}")  
-    uvicorn.run(app, host="0.0.0.0", port=11732, log_level="error")  
+if __name__ == "__main__":
+     logger.info(f"🔥 全能代理已启动: http://0.0.0.0:{LISTEN_PORT}")
+     proxy_info = PROXY_URL if PROXY_URL else "未设置"
+     logger.info(f"🔗 上游: {TARGET_BASE_URL} | 代理: {proxy_info}")
+     uvicorn.run(app, host="0.0.0.0", port=LISTEN_PORT, log_level="error")
