@@ -13,3 +13,5 @@ wheels/
 
 main.py.txt
 .venv/
+
+.env
